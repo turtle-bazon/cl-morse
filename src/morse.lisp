@@ -174,9 +174,22 @@
                                                   :initial-value '()
                                                   :from-end t)))))
 
-(defun _from-morse-seq (char-seq bag)
-  (let ((symbol (car char-seq)))
-    ))
+(defun _morse-letter (morse-seq node)
+  (let ((morse-symbol (car morse-seq)))
+    (if (not morse-symbol)
+        (or (nvalue node) #\Space)
+        (_morse-letter (cdr morse-seq) (ecase morse-symbol
+                                         (#\. (nleft node))
+                                         (#\- (nright node))
+                                         (#\Space '(#\Space)))))))
+
+(defun _from-morse-seq (morse-seq bag-morse)
+  (let ((morse-symbol (car morse-seq)))
+    (case morse-symbol
+      (#\Space (cons (_morse-letter  (reverse bag-morse) *morse-tree*)
+                     (_from-morse-seq (cdr morse-seq) '())))
+      ((#\. #\-) (_from-morse-seq (cdr morse-seq) (cons morse-symbol bag-morse)))
+      (otherwise (list (_morse-letter (reverse bag-morse) *morse-tree*))))))
 
 (defun from-morse-string (string)
-  (_from-morse-seq (map 'list 'identity string) '()))
+  (map 'string #'identity (_from-morse-seq (map 'list #'identity string) '())))
